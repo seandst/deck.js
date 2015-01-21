@@ -31,27 +31,174 @@
 </head>
 <body>
   <div class="deck-container">
-
-    <!-- Begin slides. Just make elements with a class of slide. -->
-
     <section class="slide">
-      <h2>Title</h2>
-      <h3>Subtitle</h3>
+      <h2>WebDriver Wharf</h2>
+      <p>WebDriver Wharf provides selenium servers with compatible browsers in a docker container
+      environment created for a single test run and browser instance.</p>
+      <img src="img/wharf-logo.svg" title="Yeah, I even made a logo..."/>
+      <div style="text-align: center;">
+        <h4 class="overpass-bold">One selenium server per test runner.</h4>
+        <h4 class="overpass-bold">One browser per selenium server.</h4>
+      </div>
     </section>
-
     <section class="slide">
-      <h1>Slide</h1>
+      <h2>WebDriver Wharf</h2>
+      <h3>Built with Docker</h3>
+      <p>WebDriver Wharf is powered by Docker, which makes it easy to create and maintain a base image running a 
+      selenium server and specific versions of firefox and chrome to match. Docker containers spawn quickly and
+      are easy to destroy, making them ideal for running isolated ephemeral services.</p>
+      <img src="https://d3oypxn00j2a10.cloudfront.net/0.7.0/img/homepage/docker-whale-home-logo.png" title="Docker!"/>
     </section>
-
     <section class="slide">
-      <h1>Content</h1>
+      <h2>WebDriver Wharf</h2>
+      <h3>Why?</h3>
+      <p><strong class="overpass-bold">Q:</strong>
+      Selenium already provide facilities for running tests in multiple browsers, what problem(s) does Webdriver Wharf solve?
+      </p>
+      <p><strong class="overpass-bold">A:</strong> 
+      Assuming your selenium grids works perfectly, webdriver wharf probably won't solve any problems. Unfortunately, my selenium grid
+      <s>never</s> rarely worked perfectly. Tests that worked fine on a single standalone server were mysteriously failing with cryptic selenium
+      errors when run on the grid, and each time those failures were investigated, they led back to obscure bugs in selenium, a browser's
+      webdriver implementation (even firefox, which is virtually the reference model), or some other dark crevice of Java that I don't have
+      the time to spelunk.</p>
     </section>
-
     <section class="slide">
-      <h1>Here</h1>
+      <h2>WebDriver Wharf</h2>
+      <h3>The idea</h3>
+      <p>So, rather than relying on selenium to do the parallelization, I explored this question:</br>
+      <h4>Instead of letting selenium parallelize my browsers, why not parallelize selenium itself?</h4>
+      <p>My answer to that question is webdriver wharf. After switching to wharf, about the only selenium errors I see are directly
+      related to my automation, e.g. stale elements, no such element found by a locator, etc.</p>
+      <p><em>That's pretty great.</em></p>
     </section>
-
-    <!-- End slides. -->
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>The Library</h3>
+      <img src="img/wharfpool-00.svg"/>
+      <p>Webdriver Wharf uses a basic library analogy. Wharf containers can be checked out, renewed, and checked back in.</p>
+      <p>One minor difference between wharf and a real library is that, after checkin, wharf containers are <em>immediately destroyed</em>,
+      and can never be checked out again.</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Active Pool</h3>
+      <img src="img/wharfpool-01.svg"/>
+      <p>Wharf maintains an active pool of running containers, waiting to be checked out. While docker containers
+      spawn quickly, selenium itself takes a little time to start up. Wharf ensures that selenium is listenening
+      before allowing a container to be checked out.</p>
+      <p>It's fairly cheap, resource-wise, to run the selenium standalone server as long as no browsers are
+      spawned, so this pool exists to make checkouts happen <i>fast</i>.</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Checking Out</h3>
+      <img src="img/wharfpool-02.svg"/>
+      <p>Checked out containers are removed from the active pool, and are considered to be in-use until they are checked back in.</p>
+      <p>Checked out containers cannot be checked out by another wharf user.</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>VNC</h3>
+      <img src="img/wharfpool-03.svg"/>
+      <p>In addition to a selenium server, wharf containers run VNC, so you can watch the automation run if you want or need to.</p> 
+      <p>Information in the checkout includes the selenium command executor, which is used by the local
+      webdriver instance, as well as the VNC display.</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Refilling the pool</h3>
+      <img src="img/wharfpool-04.svg"/>
+      <p>When containers are checked out, WebDriver Wharf will start to refill the pool to handle future checkouts.</p>
+      <p>Serving checkouts is Wharf's highest priority; they will not be delayed as long as a container is available 
+      for checkout in the active pool.</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Pool Exhaustion</h3>
+      <img src="img/wharfpool-05.svg"/>
+      <p>In the event of an empty pool at checkout, it may take up to 20 seconds for a new container to spawn and the
+      selenium server to start. This is handled by Wharf (the request will block), and aside from the delay it is invisible to users.</p>
+      <strong>Note:</strong>
+      <p>This delay is the main reason for having the container pool in the first place, but it is admittedly an
+      insignificant delay compared to how long a complete selenium automation run might take. But I want it <em>now!</em></p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Renewals</h3>
+      <img src="img/wharfpool-06.svg"/>
+      <p>Wharf containers have a relatively short lifetime (1 hour by default). After that, they are destroyed unless they are renewed.
+      Renewals, just like checkouts and checkins, are done by sending a request to a simple HTTP endpoint.</p>
+      <p>This helps ensure that unused containers don't hang around too long, and you don't really need to worry about checking
+      containers in (but please do check them in).</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Checking In</h3>
+      <img src="img/wharfpool-00.svg" title="Back where we started"/>
+      <p>On checkin, containers are simply destroyed.  Docker makes cleanup easy.</p>
+      <p>You did check you containers in, right?</p>
+      <p>No? Well...</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Some notes</h3>
+      <p>A few helpful things to know:</p>
+      <ul>
+      <li class="slide">One of wharf's greatest limitation is that it can only run browsers that its base image (fedora) can run. This means you give up
+      testing with IE and Safari if wharf is your only source of browsers.</li>
+      <li class="slide">One of wharf's great features is that it is nothing more than a selenium server. The key information it gives you
+      on checkout is the webdriver command_executor. Once you hand that off to your webdriver instance, <em>Nothing Is Weird</em>™.</li>
+      <li class="slide">WebDriver Wharf will periodically pull the latest image from the docker forge and update the active pool to
+      use that image, so wharf stays up to date with the configured docker image.</li>
+      <li class="slide">The image that wharf uses is, of course, configurable. The only thing wharf requires of the containers it spawns is that they
+      listen on ports 4444 for selenium and 5900 for VNC.</li>
+      </ul>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>What about sauce?</h3>
+      <img src="https://saucelabs.com/images/sauce-labs-logo.png"/>
+      <p><strong class="overpass-bold">Q:</strong>
+      Doesn't sauce labs already kinda do this?  </p>
+      <p><strong class="overpass-bold">A:</strong>
+      Yep!</p>
+      <p>But, of course, <em>even if</em> your project is open source and <em>even if</em> you qualify for Open Sauce,
+      sauce only gives you 3 simultaneous executors. That's simply not enough.</p>
+      <p>However, sauce labs is an excellent compliment to webdriver wharf, since it can help cover the gaps in coverage left by being unable
+      to <span title="*easily">run</span> IE or Safari in fedora.</p>
+    </section>
+    <section class="slide">
+      <h2>WebDriver Wharf</h2>
+      <h3>Things to improve</h3>
+      <p>Wharf is working well in its current role on my team (CloudForms QE), but there are a few things that it needs to be generally useful:
+      <ul>
+        <li class="slide">Load balancing</li>
+        <p class="slide">In my experience, one processor can run two Firefoxen simultaneously without much trouble. Putting a load balancer
+        in front of several wharves is probably a simple task, given wharf's simple interface.</p>
+        <li class="slide">The interface</li>
+        <p class="slide">The interface, while simple, is pretty bad. Right now, all interactions take place in everyone's favorite web request:
+        <u title="They're so good!">Non-idempotent unauthenticated GETs</u>. In a happy world, we'd probably have authn, authz, and a real REST interface.</p>
+        <li class="slide">Generalization</li>
+        <p class="slide">While webdriver-wharf will always be focused on selenium webdriver, there's no reason that the guts of it can't be
+        generalized into a framework for creating libraries of other docker containers.</p>
+      </ul>
+    </section>
+    <section class="slide">
+      <h1 class="overpass-bold">finis</h1>
+      <h2>Webdriver Wharf</h2>
+      <div style="float: right;">
+        <h3>Me:</h3>
+        <p>
+          <strong>Sean Myers</strong><br>
+          <a href="mailto:semyers@redhat.com">semyers@redhat.com</a>
+        </p>
+        <h3>The code:</h3>
+        <ul>
+          <li><a href="https://github.com/seandst/webdriver-wharf">Webdriver Wharf</a></li>
+          <li><a href="https://github.com/RedHatQE/cfme_dockerfiles/tree/sel_ff_chrome">Dockerfile</a></li>
+        </ul>
+      </div>
+    </section>
 
     <!-- Begin extension snippets. Add or remove as needed. -->
 

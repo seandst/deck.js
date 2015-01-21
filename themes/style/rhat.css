@@ -249,7 +249,8 @@ li {
   font-family: "Overpass"; }
 
 .overpass-bold {
-  font-family: "Overpass Bold"; }
+  font-family: "Overpass Bold";
+  text-transform: uppercase; }
 
 h1 {
   color: #000; }
